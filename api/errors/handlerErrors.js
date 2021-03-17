@@ -1,7 +1,11 @@
 const { errorConfig } = require('./errorConfig');
 
 module.exports.handlerErrors = (err, req, res, next) => {
-  const { status } = err;
+  let { status } = err;
+
+  if (err.code === 11000) {
+    status = 409;
+  }
 
   return status
     ? res.status(status).json({ message: errorConfig(status) })

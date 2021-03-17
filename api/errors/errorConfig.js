@@ -11,6 +11,5 @@ module.exports.errorConfig = status => {
   if (status === 409) {
     return 'Пользователь с такой почтой уже зарегестрирован';
   }
-
   return 'Эта ошибка еще не прописана';
 };
