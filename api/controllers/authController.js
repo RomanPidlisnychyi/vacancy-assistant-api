@@ -71,7 +71,6 @@ const authorized = async (req, res, next) => {
   let userId = isAccessTokenValid(token);
 
   req.userId = userId;
-  req.token = token;
 
   if (!userId) {
     const refreshToken = req.headers['x-refresh-token'];

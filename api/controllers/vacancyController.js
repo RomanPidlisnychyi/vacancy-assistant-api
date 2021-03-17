@@ -1,4 +1,4 @@
-const getVacancy = (req, res, next) => {
+const addVacancy = (req, res, next) => {
   console.log('req.token', req.token);
   console.log('req.userId', req.userId);
 
@@ -6,5 +6,5 @@ const getVacancy = (req, res, next) => {
 };
 
 module.exports = {
-  getVacancy,
+  addVacancy,
 };
