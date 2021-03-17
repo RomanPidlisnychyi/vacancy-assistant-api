@@ -29,10 +29,22 @@ const userLogin = (req, res, next) => {
   result.error ? next(new ErrorConstructor(400)) : next();
 };
 
+const userRecovery = (req, res, next) => {
+  const schema = Joi.object({
+    email: Joi.string()
+      .email({ tlds: { allow: false } })
+      .required(),
+  }).required();
+
+  const result = schema.validate(req.body);
+
+  result.error ? next(new ErrorConstructor(400)) : next();
+};
+
 const isAccessTokenValid = token => {
-  let result;
+  let userId;
   try {
-    result = jwt.verify(token, process.env.JWT_ACCESS_SECRET).id;
+    userId = jwt.verify(token, process.env.JWT_ACCESS_SECRET).id;
   } catch (err) {
     const expiredAt = err.expiredAt;
     const currentDate = Date.now();
@@ -41,15 +53,26 @@ const isAccessTokenValid = token => {
     if (!(timeCurrentUserValid > currentDate - expiredAt)) {
       throw new ErrorConstructor(401);
     }
-
-    result = true;
   }
 
-  return result;
+  return userId;
+};
+
+const isRefreshTokenValid = token => {
+  let userId;
+  try {
+    userId = jwt.verify(token, process.env.JWT_REFRESH_SECRET).id;
+  } catch (err) {
+    throw new ErrorConstructor(401);
+  }
+
+  return userId;
 };
 
 module.exports = {
   userCreate,
   userLogin,
+  userRecovery,
   isAccessTokenValid,
+  isRefreshTokenValid,
 };

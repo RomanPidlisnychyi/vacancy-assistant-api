@@ -1,7 +1,8 @@
 const getVacancy = (req, res, next) => {
-  console.log('req.user', req.user);
+  console.log('req.token', req.token);
+  console.log('req.userId', req.userId);
 
-  res.status(200).send();
+  res.status(200).json({ accessToken: req.token });
 };
 
 module.exports = {
