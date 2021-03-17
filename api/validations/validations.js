@@ -1,5 +1,6 @@
 const Joi = require('joi');
 const jwt = require('jsonwebtoken');
+const sgMail = require('@sendgrid/mail');
 const ErrorConstructor = require('../errors/ErrorConstructor');
 
 const userCreate = (req, res, next) => {
@@ -69,10 +70,29 @@ const isRefreshTokenValid = token => {
   return userId;
 };
 
+const sendRecoveryEmail = (email, newPassword) => {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  const msg = {
+    to: email, // Change to your recipient
+    from: process.env.SENDGRID_USER, // Change to your verified sender
+    subject: 'Sending with SendGrid is Fun',
+    text: 'and easy to do anywhere, even with Node.js',
+    html: `<strong>This is your new password: '${newPassword}'</strong>`,
+  };
+
+  try {
+    sgMail.send(msg);
+  } catch (err) {
+    throw new ErrorConstructor(418);
+  }
+};
+
 module.exports = {
   userCreate,
   userLogin,
   userRecovery,
   isAccessTokenValid,
   isRefreshTokenValid,
+  sendRecoveryEmail,
 };

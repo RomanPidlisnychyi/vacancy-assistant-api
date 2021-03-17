@@ -1,10 +1,12 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
 const userModel = require('../models/userModel');
 const ErrorConstructor = require('../errors/ErrorConstructor');
 const {
   isAccessTokenValid,
   isRefreshTokenValid,
+  sendRecoveryEmail,
 } = require('../validations/validations');
 
 const register = async (req, res, next) => {
@@ -22,11 +24,12 @@ const login = async (req, res, next) => {
 
   const user = await userModel.findOne({ email });
   if (!user) {
-    next(new ErrorConstructor(401));
+    return next(new ErrorConstructor(401));
   }
 
-  const isPassValid = bcrypt.compareSync(password, user.password);
-  if (!isPassValid) {
+  try {
+    bcrypt.compareSync(password, user.password);
+  } catch (err) {
     return next(new ErrorConstructor(401));
   }
 
@@ -86,7 +89,23 @@ const authorized = async (req, res, next) => {
   next();
 };
 
-const recoveryPassword = (req, res, next) => {};
+const recoveryPassword = async (req, res, next) => {
+  const { email } = req.body;
+
+  const user = await userModel.findOne({ email });
+
+  const newPassword = uuidv4();
+
+  sendRecoveryEmail(email, newPassword);
+
+  const hashPass = bcrypt.hashSync(newPassword, 4);
+
+  await userModel.findByIdAndUpdate(user._id, { password: hashPass });
+
+  return res
+    .status(200)
+    .json({ message: `Hi ${user.name}! We send new password on your email` });
+};
 
 module.exports = {
   register,
