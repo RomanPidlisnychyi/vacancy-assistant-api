@@ -27,17 +27,17 @@ const login = async (req, res, next) => {
     return next(new ErrorConstructor(401));
   }
 
-  try {
-    bcrypt.compareSync(password, user.password);
-  } catch (err) {
+  const isPassValid = bcrypt.compareSync(password, user.password);
+  if (!isPassValid) {
     return next(new ErrorConstructor(401));
   }
 
-  const accessToken = jwt.sign(
-    { id: user._id },
-    process.env.JWT_ACCESS_SECRET,
-    { expiresIn: '1m' }
-  );
+  const accessTokenSecret = process.env.JWT_ACCESS_SECRET + user.password;
+  console.log('accessTokenSecret', accessTokenSecret);
+
+  const accessToken = jwt.sign({ id: user._id }, accessTokenSecret, {
+    expiresIn: '1m',
+  });
 
   const refreshToken = jwt.sign(
     { id: user._id },
@@ -62,26 +62,37 @@ const login = async (req, res, next) => {
 const authorized = async (req, res, next) => {
   const { authorization } = req.headers;
 
-  if (!authorization) {
+  const token = authorization.split(' ')[1];
+  const refreshToken = req.headers['x-refresh-token'];
+
+  if (!token || !refreshToken) {
     return next(new ErrorConstructor(400));
   }
 
-  const token = authorization.split(' ')[1];
+  const id = isRefreshTokenValid(refreshToken);
+  if (!id) {
+    return next(new ErrorConstructor(401));
+  }
 
-  let userId = isAccessTokenValid(token);
+  const user = await userModel.findById(id);
+  if (!user) {
+    return next(new ErrorConstructor(404));
+  }
 
-  req.userId = userId;
+  const { password } = user;
 
-  if (!userId) {
-    const refreshToken = req.headers['x-refresh-token'];
-    userId = isRefreshTokenValid(refreshToken);
-    const accessToken = jwt.sign(
-      { id: userId },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: '1m' }
-    );
+  const accessTokenSecret = process.env.JWT_ACCESS_SECRET + password;
 
-    req.userId = userId;
+  let isTokenValid = isAccessTokenValid(token, accessTokenSecret);
+
+  req.user = user;
+
+  if (!isTokenValid) {
+    const accessToken = jwt.sign({ id: id }, accessTokenSecret, {
+      expiresIn: '1m',
+    });
+
+    req.user = user;
     req.token = accessToken;
   }
 

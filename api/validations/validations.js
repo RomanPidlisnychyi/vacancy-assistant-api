@@ -42,10 +42,10 @@ const userRecovery = (req, res, next) => {
   result.error ? next(new ErrorConstructor(400)) : next();
 };
 
-const isAccessTokenValid = token => {
+const isAccessTokenValid = (token, accessTokenSecret) => {
   let userId;
   try {
-    userId = jwt.verify(token, process.env.JWT_ACCESS_SECRET).id;
+    userId = jwt.verify(token, accessTokenSecret).id;
   } catch (err) {
     const expiredAt = err.expiredAt;
     const currentDate = Date.now();
