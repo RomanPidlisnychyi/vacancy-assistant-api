@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const sgMail = require('@sendgrid/mail');
 const ErrorConstructor = require('../errors/ErrorConstructor');
 
-const userCreate = (req, res, next) => {
+const createUserValidation = (req, res, next) => {
   const schema = Joi.object({
     name: Joi.string().required(),
     email: Joi.string()
@@ -17,7 +17,7 @@ const userCreate = (req, res, next) => {
   result.error ? next(new ErrorConstructor(400)) : next();
 };
 
-const userLogin = (req, res, next) => {
+const loginUserValidation = (req, res, next) => {
   const schema = Joi.object({
     email: Joi.string()
       .email({ tlds: { allow: false } })
@@ -30,7 +30,7 @@ const userLogin = (req, res, next) => {
   result.error ? next(new ErrorConstructor(400)) : next();
 };
 
-const userRecovery = (req, res, next) => {
+const recoveryUserValidation = (req, res, next) => {
   const schema = Joi.object({
     email: Joi.string()
       .email({ tlds: { allow: false } })
@@ -88,11 +88,45 @@ const sendRecoveryEmail = (email, newPassword) => {
   }
 };
 
+const createVacancyValidation = (req, res, next) => {
+  const schema = Joi.object({
+    companyName: Joi.string().required(),
+    URL: Joi.string(),
+    location: Joi.string(),
+    position: Joi.string(),
+    stack: Joi.string(),
+    phone: Joi.string(),
+    status: Joi.string(),
+  }).required();
+
+  const result = schema.validate(req.body);
+
+  result.error ? next(new ErrorConstructor(400)) : next();
+};
+
+const updateVacancyValidation = (req, res, next) => {
+  const schema = Joi.object({
+    companyName: Joi.string(),
+    URL: Joi.string(),
+    location: Joi.string(),
+    position: Joi.string(),
+    stack: Joi.string(),
+    phone: Joi.string(),
+    status: Joi.string(),
+  }).min(1);
+
+  const result = schema.validate(req.body);
+
+  result.error ? next(new ErrorConstructor(400)) : next();
+};
+
 module.exports = {
-  userCreate,
-  userLogin,
-  userRecovery,
+  createUserValidation,
+  loginUserValidation,
+  recoveryUserValidation,
   isAccessTokenValid,
   isRefreshTokenValid,
   sendRecoveryEmail,
+  createVacancyValidation,
+  updateVacancyValidation,
 };

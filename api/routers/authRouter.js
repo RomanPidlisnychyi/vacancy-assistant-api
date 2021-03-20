@@ -3,18 +3,25 @@ const { asyncWrapper } = require('../helpers/asyncWrapper');
 const {
   register,
   login,
+  authorized,
+  current,
   recoveryPassword,
 } = require('../controllers/authController');
 const {
-  userCreate,
-  userLogin,
-  userRecovery,
+  createUserValidation,
+  loginUserValidation,
+  recoveryUserValidation,
 } = require('../validations/validations');
 
 const authRouter = Router();
 
-authRouter.post('/register', userCreate, asyncWrapper(register));
-authRouter.post('/login', userLogin, asyncWrapper(login));
-authRouter.post('/recovery', userRecovery, asyncWrapper(recoveryPassword));
+authRouter.post('/register', createUserValidation, asyncWrapper(register));
+authRouter.post('/login', loginUserValidation, asyncWrapper(login));
+authRouter.get('/current', asyncWrapper(authorized), asyncWrapper(current));
+authRouter.post(
+  '/recovery',
+  recoveryUserValidation,
+  asyncWrapper(recoveryPassword)
+);
 
 module.exports = authRouter;

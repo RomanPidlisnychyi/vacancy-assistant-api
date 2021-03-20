@@ -50,9 +50,9 @@ const login = async (req, res, next) => {
       name: user.name,
       email,
     },
-    token: {
-      accessToken,
-      refreshToken,
+    tokens: {
+      access: accessToken,
+      refresh: refreshToken,
     },
   };
 
@@ -85,7 +85,7 @@ const authorized = async (req, res, next) => {
 
   let isTokenValid = isAccessTokenValid(token, accessTokenSecret);
 
-  req.user = user;
+  req.user = user._doc;
 
   if (!isTokenValid) {
     const accessToken = jwt.sign({ id: id }, accessTokenSecret, {
@@ -97,6 +97,18 @@ const authorized = async (req, res, next) => {
   }
 
   next();
+};
+
+const current = async (req, res, next) => {
+  const response = {
+    user: {
+      name: req.user.name,
+      email: req.user.email,
+    },
+    access: req.token,
+  };
+
+  return res.status(200).json(response);
 };
 
 const recoveryPassword = async (req, res, next) => {
@@ -121,5 +133,6 @@ module.exports = {
   register,
   login,
   authorized,
+  current,
   recoveryPassword,
 };

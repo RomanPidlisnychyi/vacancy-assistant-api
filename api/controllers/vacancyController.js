@@ -1,10 +1,71 @@
-const addVacancy = (req, res, next) => {
-  console.log('req.token', req.token);
-  console.log('req.user', req.user);
+const ErrorConstructor = require('../errors/ErrorConstructor');
+const vacancyModel = require('../models/vacancyModel');
 
-  res.status(200).json({ accessToken: req.token });
+const createVacancy = async (req, res, next) => {
+  const {
+    user: { _id: userId },
+    token: access,
+    body,
+  } = req;
+
+  const vacancy = await vacancyModel.create({ ...body, userId });
+
+  res.status(200).json({ vacancy, access });
+};
+
+const updateVacancy = async (req, res, next) => {
+  const { vacancyId } = req.params;
+
+  if (!vacancyId) {
+    return next(new ErrorConstructor(400));
+  }
+
+  const {
+    user: { _id: userId },
+    token: access,
+    body,
+  } = req;
+
+  const vacancy = await vacancyModel.findOneAndUpdate(
+    {
+      $and: [{ userId }, { _id: vacancyId }],
+    },
+    { ...body },
+    { new: true }
+  );
+
+  if (!vacancy) {
+    return next(new ErrorConstructor(404));
+  }
+
+  res.status(200).json({ vacancy, access });
+};
+
+const deleteVacancy = async (req, res, next) => {
+  const { vacancyId } = req.params;
+
+  if (!vacancyId) {
+    return next(new ErrorConstructor(400));
+  }
+
+  const {
+    user: { _id: userId },
+    token: access,
+  } = req;
+
+  const vacancy = await vacancyModel.findOneAndDelete({
+    $and: [{ userId }, { _id: vacancyId }],
+  });
+
+  if (!vacancy) {
+    return next(new ErrorConstructor(404));
+  }
+
+  res.status(200).json({ access });
 };
 
 module.exports = {
-  addVacancy,
+  createVacancy,
+  updateVacancy,
+  deleteVacancy,
 };

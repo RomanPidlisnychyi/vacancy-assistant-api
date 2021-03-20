@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const morgan = require('morgan');
 const authRouter = require('./routers/authRouter');
 const vacancyRouter = require('./routers/vacancyRouter');
@@ -10,10 +11,14 @@ const PORT = process.env.PORT || 3001;
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(morgan('combined'));
+app.use(express.static('public'));
+
 app.use('/auth', authRouter);
 app.use('/vacancy', vacancyRouter);
+
 app.use(handlerErrors);
 
 app.listen(PORT, async () => {
