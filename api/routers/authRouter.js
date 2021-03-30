@@ -5,12 +5,15 @@ const {
   login,
   authorized,
   current,
-  recoveryPassword,
+  refresh,
+  setRecoveryPassword,
+  setNewPassword,
 } = require('../controllers/authController');
 const {
   createUserValidation,
   loginUserValidation,
-  recoveryUserValidation,
+  setRecoveryPasswordValidation,
+  setNewPasswordValidation,
 } = require('../validations/validations');
 
 const authRouter = Router();
@@ -18,10 +21,16 @@ const authRouter = Router();
 authRouter.post('/register', createUserValidation, asyncWrapper(register));
 authRouter.post('/login', loginUserValidation, asyncWrapper(login));
 authRouter.get('/current', asyncWrapper(authorized), asyncWrapper(current));
+authRouter.get('/refresh', asyncWrapper(authorized), asyncWrapper(refresh));
 authRouter.post(
-  '/recovery',
-  recoveryUserValidation,
-  asyncWrapper(recoveryPassword)
+  '/setRecoveryPassword',
+  setRecoveryPasswordValidation,
+  asyncWrapper(setRecoveryPassword)
+);
+authRouter.patch(
+  '/setNewPassword',
+  setNewPasswordValidation,
+  asyncWrapper(setNewPassword)
 );
 
 module.exports = authRouter;

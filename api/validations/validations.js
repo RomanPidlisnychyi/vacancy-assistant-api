@@ -30,11 +30,25 @@ const loginUserValidation = (req, res, next) => {
   result.error ? next(new ErrorConstructor(400)) : next();
 };
 
-const recoveryUserValidation = (req, res, next) => {
+const setRecoveryPasswordValidation = (req, res, next) => {
   const schema = Joi.object({
     email: Joi.string()
       .email({ tlds: { allow: false } })
       .required(),
+  }).required();
+
+  const result = schema.validate(req.body);
+
+  result.error ? next(new ErrorConstructor(400)) : next();
+};
+
+const setNewPasswordValidation = (req, res, next) => {
+  const schema = Joi.object({
+    email: Joi.string()
+      .email({ tlds: { allow: false } })
+      .required(),
+    recoveryPassword: Joi.string().required(),
+    password: Joi.string().required(),
   }).required();
 
   const result = schema.validate(req.body);
@@ -70,7 +84,7 @@ const isRefreshTokenValid = token => {
   return userId;
 };
 
-const sendRecoveryEmail = (email, newPassword) => {
+const sendRecoveryEmail = (email, recoveryPassword) => {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
   const msg = {
@@ -78,7 +92,7 @@ const sendRecoveryEmail = (email, newPassword) => {
     from: process.env.SENDGRID_USER, // Change to your verified sender
     subject: 'Sending with SendGrid is Fun',
     text: 'and easy to do anywhere, even with Node.js',
-    html: `<strong>This is your new password: '${newPassword}'</strong>`,
+    html: `<strong>Enter this number to recover you password: ${recoveryPassword}</strong>`,
   };
 
   try {
@@ -89,6 +103,7 @@ const sendRecoveryEmail = (email, newPassword) => {
 };
 
 const createVacancyValidation = (req, res, next) => {
+  console.log('req.body', req.body);
   const schema = Joi.object({
     companyName: Joi.string().required(),
     URL: Joi.string(),
@@ -96,12 +111,15 @@ const createVacancyValidation = (req, res, next) => {
     position: Joi.string(),
     stack: Joi.string(),
     phone: Joi.string(),
+    task: Joi.boolean(),
     status: Joi.string(),
   }).required();
 
   const result = schema.validate(req.body);
 
-  result.error ? next(new ErrorConstructor(400)) : next();
+  result.error
+    ? next(new ErrorConstructor(400, 'createVacancyValidation'))
+    : next();
 };
 
 const updateVacancyValidation = (req, res, next) => {
@@ -112,6 +130,8 @@ const updateVacancyValidation = (req, res, next) => {
     position: Joi.string(),
     stack: Joi.string(),
     phone: Joi.string(),
+    favorite: Joi.boolean(),
+    task: Joi.boolean(),
     status: Joi.string(),
   }).min(1);
 
@@ -123,7 +143,8 @@ const updateVacancyValidation = (req, res, next) => {
 module.exports = {
   createUserValidation,
   loginUserValidation,
-  recoveryUserValidation,
+  setRecoveryPasswordValidation,
+  setNewPasswordValidation,
   isAccessTokenValid,
   isRefreshTokenValid,
   sendRecoveryEmail,

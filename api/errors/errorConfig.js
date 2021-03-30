@@ -1,15 +1,15 @@
 module.exports.errorConfig = status => {
   if (status === 400) {
-    return 'Не верные параметры запроса';
+    return 'Invalid request parameters';
   }
   if (status === 401) {
-    return 'Не верный логин или пароль';
+    return 'Wrong login or password';
   }
   if (status === 404) {
-    return 'По вашему запросу ничего не найдено';
+    return 'No results were found for your search';
   }
   if (status === 409) {
-    return 'Пользователь с такой почтой уже зарегестрирован';
+    return 'The user with this email is already registered';
   }
-  return 'Эта ошибка еще не прописана';
+  return 'This error is not yet spelled out';
 };

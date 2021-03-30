@@ -9,13 +9,22 @@ const vacancySchema = new Schema({
   position: String,
   stack: String,
   phone: String,
+  favorite: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  task: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
   status: {
     type: String,
     required: true,
-    enum: ['interested', 'sent', 'accepted', 'rejected'],
     default: 'interested',
   },
-  date: { type: Number, default: Date.now(), require: true },
+  date: { type: Number, require: true },
 });
 
 const vacancyModel = mongoose.model('Vacancy', vacancySchema);

@@ -8,6 +8,7 @@ const {
   isRefreshTokenValid,
   sendRecoveryEmail,
 } = require('../validations/validations');
+const numberGenerator = require('../helpers/numberGenerator');
 
 const register = async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -32,8 +33,15 @@ const login = async (req, res, next) => {
     return next(new ErrorConstructor(401));
   }
 
+  const { recoveryPassword } = user;
+
+  if (recoveryPassword) {
+    await userModel.findByIdAndUpdate(user._id, {
+      $unset: { recoveryPassword },
+    });
+  }
+
   const accessTokenSecret = process.env.JWT_ACCESS_SECRET + user.password;
-  console.log('accessTokenSecret', accessTokenSecret);
 
   const accessToken = jwt.sign({ id: user._id }, accessTokenSecret, {
     expiresIn: '1m',
@@ -111,22 +119,45 @@ const current = async (req, res, next) => {
   return res.status(200).json(response);
 };
 
-const recoveryPassword = async (req, res, next) => {
+const refresh = async (req, res, next) => {
+  return res.status(200).json({ access: req.token });
+};
+
+const setRecoveryPassword = async (req, res, next) => {
   const { email } = req.body;
 
   const user = await userModel.findOne({ email });
+  if (!user) {
+    return next(new ErrorConstructor(404));
+  }
 
-  const newPassword = uuidv4();
+  const recoveryPassword = numberGenerator();
 
-  sendRecoveryEmail(email, newPassword);
+  sendRecoveryEmail(email, recoveryPassword);
 
-  const hashPass = bcrypt.hashSync(newPassword, 4);
+  await userModel.findByIdAndUpdate(user._id, { recoveryPassword });
 
-  await userModel.findByIdAndUpdate(user._id, { password: hashPass });
+  return res.status(201).json({ email });
+};
 
-  return res
-    .status(200)
-    .json({ message: `Hi ${user.name}! We send new password on your email` });
+const setNewPassword = async (req, res, next) => {
+  const { email, recoveryPassword, password } = req.body;
+
+  const hashPass = bcrypt.hashSync(password, 4);
+
+  const user = await userModel.findOneAndUpdate(
+    {
+      $and: [{ email }, { recoveryPassword }],
+    },
+    { password: hashPass, $unset: { recoveryPassword } },
+    { new: true }
+  );
+
+  if (!user) {
+    return next(new ErrorConstructor(404));
+  }
+
+  return res.status(200).json({ name: user.name, email });
 };
 
 module.exports = {
@@ -134,5 +165,7 @@ module.exports = {
   login,
   authorized,
   current,
-  recoveryPassword,
+  refresh,
+  setRecoveryPassword,
+  setNewPassword,
 };

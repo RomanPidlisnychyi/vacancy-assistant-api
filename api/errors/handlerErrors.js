@@ -1,7 +1,6 @@
 const { errorConfig } = require('./errorConfig');
 
 module.exports.handlerErrors = (err, req, res, next) => {
-  console.log('err', err);
   let { status } = err;
 
   if (err.code === 11000) {
